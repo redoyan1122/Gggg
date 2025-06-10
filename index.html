@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real Bet Web App</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 15px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .balance {
+      text-align: right;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .team-btn {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 10px 20px;
+      background: #ddd;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .selected {
+      background: #4caf50;
+      color: white;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4caf50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .admin-toggle {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #444;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #adminPanel {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="balance">ব্যালেন্স: <span id="balance">৳1000</span></div>
+
+    <div class="section">
+      <h3>ম্যাচ: Argentina vs Brazil</h3>
+      <div>
+        <div id="team1" class="team-btn">Argentina</div>
+        <div id="team2" class="team-btn">Brazil</div>
+      </div>
+      <div id="multiplier" style="margin-top:10px; font-weight: bold;"></div>
+      <label>Amount:</label>
+      <input type="number" id="betAmount" placeholder="Enter bet amount" />
+      <button onclick="confirmBet()">Bet Confirm</button>
+    </div>
+
+    <div class="section">
+      <h3>Deposit</h3>
+      <label>Payment Method:</label>
+      <select id="depositMethod">
+        <option value="bKash">bKash</option>
+        <option value="Nagad">Nagad</option>
+      </select>
+      <p>01816395401 এই নাম্বারে সেন্ড মানি করুন।</p>
+      <label>Amount:</label>
+      <input type="number" id="depositAmount" placeholder="Enter deposit amount" />
+      <label>Transaction ID:</label>
+      <input type="text" id="trxId" placeholder="Enter transaction ID" />
+      <button onclick="submitDeposit()">Submit Deposit</button>
+    </div>
+
+    <div class="section">
+      <h3>Withdraw</h3>
+      <label>Number:</label>
+      <input type="text" id="withdrawNumber" placeholder="Your bKash/Nagad number" />
+      <label>Payment Method:</label>
+      <select id="withdrawMethod">
+        <option value="bKash">bKash</option>
+        <option value="Nagad">Nagad</option>
+      </select>
+      <label>Amount:</label>
+      <input type="number" id="withdrawAmount" placeholder="Enter withdraw amount" />
+      <button onclick="submitWithdraw()">Withdraw Confirm</button>
+    </div>
+
+    <div id="adminPanel" class="section">
+      <h3>Admin Panel</h3>
+      <label>Match Title:</label>
+      <input type="text" id="matchTitle" placeholder="Match title" />
+      <label>Team 1:</label>
+      <input type="text" id="team1Name" />
+      <label>Team 2:</label>
+      <input type="text" id="team2Name" />
+      <label>Team 1 Multiplier:</label>
+      <input type="number" id="team1Multiplier" step="0.1" />
+      <label>Team 2 Multiplier:</label>
+      <input type="number" id="team2Multiplier" step="0.1" />
+      <button onclick="uploadMatch()">Upload Match</button>
+
+      <div style="margin-top:20px">
+        <h4>Declare Winner:</h4>
+        <div id="declareList">
+          <!-- Matches will appear here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-toggle" onclick="toggleAdmin()">R</div>
+
+  <script>
+    let selectedTeam = null;
+    const multipliers = {
+      "Argentina": 1.8,
+      "Brazil": 2.0
+    };
+
+    document.getElementById("team1").onclick = () => selectTeam("Argentina");
+    document.getElementById("team2").onclick = () => selectTeam("Brazil");
+
+    function selectTeam(team) {
+      selectedTeam = team;
+      document.getElementById("team1").classList.remove("selected");
+      document.getElementById("team2").classList.remove("selected");
+      document.getElementById(team === "Argentina" ? "team1" : "team2").classList.add("selected");
+      document.getElementById("multiplier").innerText = `Profit Multiplier: ×${multipliers[team]}`;
+    }
+
+    function confirmBet() {
+      const amount = parseFloat(document.getElementById("betAmount").value);
+      if (!selectedTeam || isNaN(amount) || amount <= 0) {
+        alert("সঠিক টিম এবং এমাউন্ট সিলেক্ট করুন!");
+        return;
+      }
+      alert(`আপনি ${selectedTeam}-এ ৳${amount} বেট করেছেন।`);
+    }
+
+    function submitDeposit() {
+      const method = document.getElementById("depositMethod").value;
+      const amount = document.getElementById("depositAmount").value;
+      const trx = document.getElementById("trxId").value;
+      if (!amount || !trx) {
+        alert("সকল তথ্য পূরণ করুন!");
+        return;
+      }
+      alert(`Deposit Request Sent:\nMethod: ${method}\nAmount: ৳${amount}\nTrxID: ${trx}`);
+    }
+
+    function submitWithdraw() {
+      const number = document.getElementById("withdrawNumber").value;
+      const method = document.getElementById("withdrawMethod").value;
+      const amount = document.getElementById("withdrawAmount").value;
+      if (!number || !amount) {
+        alert("সকল তথ্য পূরণ করুন!");
+        return;
+      }
+      alert(`Withdraw Request Sent:\nTo: ${number}\nMethod: ${method}\nAmount: ৳${amount}`);
+    }
+
+    function toggleAdmin() {
+      const password = prompt("Enter admin password:");
+      if (password === "1234") {
+        document.getElementById("adminPanel").style.display = "block";
+      } else {
+        alert("Incorrect password");
+      }
+    }
+
+    function uploadMatch() {
+      const title = document.getElementById("matchTitle").value;
+      const t1 = document.getElementById("team1Name").value;
+      const t2 = document.getElementById("team2Name").value;
+      const m1 = document.getElementById("team1Multiplier").value;
+      const m2 = document.getElementById("team2Multiplier").value;
+
+      const div = document.createElement("div");
+      div.innerHTML = `${title}: <button onclick="declareWin(this, '${t1}')">${t1} WIN</button> <button onclick="declareWin(this, '${t2}')">${t2} WIN</button>`;
+      document.getElementById("declareList").appendChild(div);
+    }
+
+    function declareWin(btn, team) {
+      alert(team + " is declared WINNER.");
+      btn.parentElement.remove();
+    }
+  </script>
+</body>
+</html>
